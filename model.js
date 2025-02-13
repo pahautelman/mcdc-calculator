@@ -77,31 +77,105 @@ class MCDCModel {
     }
 
     findMinimumTestCases() {
-        const requiredPairs = new Set();
-        const selectedTestCases = new Set();
-        
-        this.independencePairs.forEach((pairs, variable) => {
-            if (pairs.length > 0) {
-                const firstPair = pairs[0];
-                firstPair.indices.forEach(i => selectedTestCases.add(i));
-                requiredPairs.add(`${variable}-${firstPair.indices.join('-')}`);
+        const maxTries = 500;
+        const n = this.independencePairs.size;  // Number of variables in the boolean condition
+        const optimalSize = n + 1;
+        let bestSolution = null;
+    
+        // Helper: Fisher–Yates shuffle.
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
-        });
-        
-        this.minimalTestCases = Array.from(selectedTestCases).map(i => this.truthTable[i]);
+            return array;
+        }
+    
+        for (let attempt = 0; attempt < maxTries; attempt++) {
+            const selectedTestCases = new Set();
+
+            // Get the variables, sorting by number of pairs (most restricted first)
+            const sortedVars = shuffle(Array.from(this.independencePairs.entries()))
+                .sort(([, pairsA], [, pairsB]) => pairsA.length - pairsB.length);
+    
+            // For each variable, shuffle its pairs and pick the pair that adds the fewest new test cases.
+            sortedVars.forEach(([variable, pairs]) => {
+                if (pairs.length === 0) {
+                    return;
+                }
+                // Shuffle the array of pairs.
+                const shuffledPairs = shuffle([...pairs]);
+                let bestPair = null;
+                let minNewTests = Infinity;
+                // Loop through the pairs.
+                for (const pair of shuffledPairs) {
+                    // Count how many new test indices this pair would add.
+                    const newTests = pair.indices.filter(i => !selectedTestCases.has(i)).length;
+                    if (newTests < minNewTests) {
+                        bestPair = pair;
+                        minNewTests = newTests;
+                        // Smart stopping: if no new tests are needed, we can break early.
+                        if (minNewTests === 1) {
+                            break;
+                        }
+                    }
+                }
+                if (bestPair) {
+                    bestPair.indices.forEach(i => selectedTestCases.add(i));
+                }
+            });
+    
+            // Check if we've reached the optimal size.
+            if (selectedTestCases.size === optimalSize) {
+                bestSolution = selectedTestCases;
+                break;
+            }
+            // Optionally, if this iteration yields a better (i.e. smaller) solution than any previous, we keep it.
+            if (!bestSolution || selectedTestCases.size < bestSolution.size) {
+                bestSolution = selectedTestCases;
+            }
+        }
+    
+        // Map the indices to the actual test cases.
+        this.minimalTestCases = Array.from(bestSolution).map(i => this.truthTable[i]);
         return this.minimalTestCases;
     }
+      
 
     verifyCoverage() {
-        const varCoverage = this.variables.every(variable => {
-            const values = this.minimalTestCases.map(tc => tc[variable]);
-            return values.includes(true) && values.includes(false);
+        // Check for each variable if there's an independent pair that toggles it
+        const allVariablesSatisfied = this.variables.every(variable => {
+            let foundPair = false;
+            const testCases = this.minimalTestCases;
+                
+            for (let i = 0; i < testCases.length; i++) {
+                for (let j = i + 1; j < testCases.length; j++) {
+                    const tc1 = testCases[i];
+                    const tc2 = testCases[j];
+                    
+                    // Check that the target variable changes and decision outcome changes
+                    if (tc1[variable] !== tc2[variable] && tc1.decision !== tc2.decision) {
+                        // Ensure all other variables remain the same
+                        const othersUnchanged = this.variables.every(varName => {
+                            if (varName === variable) return true;
+                            return tc1[varName] === tc2[varName];
+                        });
+                        if (othersUnchanged) {
+                            foundPair = true;
+                            break;
+                        }
+                    }
+                }
+                if (foundPair) break;
+            }
+            return foundPair;
         });
         
-        const decisionCoverage = this.minimalTestCases.some(tc => tc.decision) && 
-                               this.minimalTestCases.some(tc => !tc.decision);
+        // Also check that overall decision coverage is present
+        const decisionCoverage = this.minimalTestCases.some(tc => tc.decision) &&
+                                 this.minimalTestCases.some(tc => !tc.decision);
         
-        this.coverageValid = varCoverage && decisionCoverage;
+        this.coverageValid = allVariablesSatisfied && decisionCoverage;
         return this.coverageValid;
-    }
+    }    
 }
