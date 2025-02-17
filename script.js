@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     view.setSubmitHandler(async (expression) => {
         const results = await controller.processExpression(expression);
-        console.log('got results', results);
         view.displayResults(results);
     });
 });

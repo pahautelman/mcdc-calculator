@@ -11,14 +11,9 @@ class MCDCController {
             this.model.decisionFunction = parsed.decisionFunction;
 
             this.model.generateTruthTable();
-            console.log('generated tt');
-
             this.model.findIndependencePairs();
-            console.log('found pairs');
             this.model.findMinimumTestCases();
-            console.log('found minimal test cases');
             this.model.verifyCoverage();
-            console.log('verified coverage');
 
             return {
                 variables: this.model.variables,

@@ -1,15 +1,35 @@
 class MCDCView {
     constructor() {
         this.form = document.getElementById('mainForm');
-        this.input = document.getElementById('expressionInput');
+        this.editorContainer = document.getElementById('editorContainer');
         this.resultContainer = document.getElementById('resultContainer');
+        this.initializeEditor();
         this.setupEventListeners();
+    }
+
+    initializeEditor() {
+        this.editor = CodeMirror(this.editorContainer, {
+            lineNumbers: true,
+            placeholder: "Enter expression (e.g., (A and B) or not C)",
+            extraKeys: {
+                "Enter": (cm) => {
+                    const cursor = cm.getCursor();
+                    const line = cm.getLine(cursor.line);
+                    const indent = line.match(/^\s*/)[0];
+                    cm.replaceSelection("\n" + indent);
+                }
+            },
+            autoCloseBrackets: true,
+            viewportMargin: Infinity,
+            inputStyle: 'textarea',
+            spellcheck: false,
+        });
     }
 
     setupEventListeners() {
         this.form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const expression = this.input.value.trim();
+            const expression = this.editor.getValue().trim();
             
             if (!expression) {
                 this.showError('Please enter a boolean expression');
@@ -40,18 +60,18 @@ class MCDCView {
     }
 
     showError(message) {
-        this.input.classList.add('border-red-500');
-        this.input.focus();
+        this.editorContainer.classList.add('border-red-500');
+        this.editorContainer.focus();
 
         const errorDiv = document.createElement('div');
         errorDiv.className = 'text-red-600 text-sm mt-2';
         errorDiv.textContent = message;
 
-        this.input.parentNode.appendChild(errorDiv);
+        this.editorContainer.parentNode.appendChild(errorDiv);
         setTimeout(() => {
-            this.input.classList.remove('border-red-500');
+            this.editorContainer.classList.remove('border-red-500');
             errorDiv.remove();
-        }, 3000);
+        }, 5000);
     }
 
     displayResults(results) {
