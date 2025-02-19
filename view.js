@@ -204,7 +204,6 @@ class MCDCView {
         });
     }
     
-
     renderIndependencePairs(container, pairs, variables) {
         const pairsContainer = document.createElement('div');
         pairsContainer.className = 'space-y-4';
