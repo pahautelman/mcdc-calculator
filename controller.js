@@ -8,8 +8,8 @@ class MCDCController {
         try {
             const parsed = await this.parseExpression(expression);
 
-            // Check if the expression contains more than 10 variables
-            if (parsed.variables.length > 10) {
+            // Check if the expression contains more than 15 variables
+            if (parsed.variables.length > 15) {
                 const warningMessage = `Warning: You have entered ${parsed.variables.length} variables. Execution might be slow. It is recommended to start with a lower maxTries value and increase it if an optimal solution is not found. Do you wish to continue?`;
                 const userConfirmed = await this.view.showConfirmation(warningMessage);
                 if (!userConfirmed) {

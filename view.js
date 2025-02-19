@@ -45,8 +45,8 @@ class MCDCView {
 
             const maxTries = parseInt(this.maxTriesInput.value) || 10;
             // Add validation for maxTries
-            if (maxTries < 10 || maxTries > 500) {
-                this.showError('maxTries must be between 10 and 500');
+            if (maxTries < 10 || maxTries > 4000) {
+                this.showError('maxTries must be between 10 and 4000');
                 return;
             }
 
@@ -102,10 +102,6 @@ class MCDCView {
         this.createSection('Minimal Test Cases', 
             content => this.renderMinimalTestCases(content, results.minimalTestCases, results.independencePairs, results.variables), 
             true
-        );
-        
-        this.createSection('Independence Pairs', 
-            content => this.renderIndependencePairs(content, results.independencePairs, results.variables)
         );
         
         this.createSection('Coverage Verification', 

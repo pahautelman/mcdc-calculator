@@ -45,7 +45,7 @@
               type="number" 
               id="maxTries" 
               min="10" 
-              max="500" 
+              max="4000" 
               value="10" 
               class="mt-1 block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             >
@@ -61,8 +61,8 @@
         <div class="max-tries-info text-sm text-gray-600 hidden">
           <p class="mb-2">The <code>maxTries</code> parameter controls the number of attempts the algorithm makes to find the minimal test set.</p>
           <ul class="list-disc list-inside space-y-1">
-            <li><strong>Lower values (10-100):</strong> Faster computation, might miss optimal solutions</li>
-            <li><strong>Higher values (100-500):</strong> Better chance of optimal solution, longer computation</li>
+            <li><strong>Lower values (10-500):</strong> Faster computation, might miss optimal solutions</li>
+            <li><strong>Higher values (500-4000):</strong> Better chance of optimal solution, longer computation</li>
           </ul>
           <p class="mt-2">Adjust if you suspect better solutions might exist than what's found with current settings. Note that optimal solutions have <span><strong> (number_of_variables) + 1 </strong></span> test cases.</p>
         </div>
