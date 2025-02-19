@@ -6,6 +6,7 @@ class MCDCModel {
         this.independencePairs = new Map();
         this.minimalTestCases = [];
         this.coverageValid = false;
+        this.optimalSolution = false;
     }
 
     generateTruthTable() {
@@ -76,8 +77,7 @@ class MCDCModel {
                tc1.decision !== tc2.decision;
     }
 
-    findMinimumTestCases() {
-        const maxTries = 500;
+    findMinimumTestCases(maxTries = 10) {
         const n = this.independencePairs.size;  // Number of variables in the boolean condition
         const optimalSize = n + 1;
         let bestSolution = null;
@@ -141,7 +141,6 @@ class MCDCModel {
         return this.minimalTestCases;
     }
       
-
     verifyCoverage() {
         // Check for each variable if there's an independent pair that toggles it
         const allVariablesSatisfied = this.variables.every(variable => {
@@ -176,6 +175,10 @@ class MCDCModel {
                                  this.minimalTestCases.some(tc => !tc.decision);
         
         this.coverageValid = allVariablesSatisfied && decisionCoverage;
-        return this.coverageValid;
+        
+        // Check optimal solution
+        this.optimalSolution = this.minimalTestCases.length === this.variables.length + 1;
+        
+        return this.coverageValid, this.optimalSolution;
     }    
 }

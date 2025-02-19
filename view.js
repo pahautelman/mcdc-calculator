@@ -3,6 +3,7 @@ class MCDCView {
         this.form = document.getElementById('mainForm');
         this.editorContainer = document.getElementById('editorContainer');
         this.resultContainer = document.getElementById('resultContainer');
+        this.maxTriesInput = document.getElementById('maxTries');
         this.initializeEditor();
         this.setupEventListeners();
     }
@@ -27,12 +28,25 @@ class MCDCView {
     }
 
     setupEventListeners() {
+        document.querySelectorAll('[data-info-trigger]').forEach(button => {
+            button.addEventListener('click', () => {
+                const content = button.closest('.bg-white').querySelector('.max-tries-info');
+                content.classList.toggle('hidden');
+            });
+        });
+
         this.form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const expression = this.editor.getValue().trim();
-            
             if (!expression) {
                 this.showError('Please enter a boolean expression');
+                return;
+            }
+
+            const maxTries = parseInt(this.maxTriesInput.value) || 10;
+            // Add validation for maxTries
+            if (maxTries < 10 || maxTries > 500) {
+                this.showError('maxTries must be between 10 and 500');
                 return;
             }
 
@@ -40,6 +54,7 @@ class MCDCView {
             try {
                 await this.onSubmit(expression);
             } catch (error) {
+                console.error(error);
                 this.showError(error.message);
             }
         });
@@ -82,16 +97,12 @@ class MCDCView {
             true
         );
         
-        this.createSection('Truth Table', 
-            content => this.renderTruthTable(content, results.truthTable)
-        );
-        
         this.createSection('Independence Pairs', 
             content => this.renderIndependencePairs(content, results.independencePairs, results.variables)
         );
         
         this.createSection('Coverage Verification', 
-            content => this.renderCoverageVerification(content, results.coverageValid), 
+            content => this.renderCoverageVerification(content, results.coverageValid, results.optimalSolution), 
             true
         );
 
@@ -142,7 +153,7 @@ class MCDCView {
                 <span class="font-mono text-sm">Test ${index + 1}:</span>
                 ${variables.map(v => `
                     <span class="ml-2 px-2 py-1 bg-white rounded border">
-                        ${v} = ${testCase[v] ? 'true' : 'false'}
+                        ${v}: ${testCase[v] ? 'true' : 'false'}
                     </span>
                 `).join('')}
                 <span class="ml-2 px-2 py-1 ${testCase.decision ? 'bg-green-100' : 'bg-red-100'}">
@@ -152,34 +163,6 @@ class MCDCView {
             list.appendChild(div);
         });
         container.appendChild(list);    
-    }
-
-    renderTruthTable(container, table) {
-        const variables = Object.keys(table[0]).filter(k => k !== 'decision');
-        const tableEl = document.createElement('table');
-        tableEl.className = 'min-w-full divide-y divide-gray-200';
-        
-        tableEl.innerHTML = `
-            <thead class="bg-gray-50">
-                <tr>
-                    ${variables.map(v => `<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">${v}</th>`).join('')}
-                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Decision</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                ${table.map((row, i) => `
-                    <tr class="${i % 2 ? 'bg-gray-50' : ''}">
-                        ${variables.map(v => `
-                            <td class="px-4 py-3 text-sm font-mono text-gray-600">${row[v] ? 'true' : 'false'}</td>
-                        `).join('')}
-                        <td class="px-4 py-3 text-sm font-mono ${row.decision ? 'text-green-600' : 'text-red-600'}">
-                            ${row.decision ? 'true' : 'false'}
-                        </td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        `;
-        container.appendChild(tableEl);
     }
 
     renderIndependencePairs(container, pairs, variables) {
@@ -220,16 +203,22 @@ class MCDCView {
         container.appendChild(pairsContainer);
     }
 
-    renderCoverageVerification(container, isValid) {
-        const status = isValid ? 
+    renderCoverageVerification(container, isValid, isOptimal) {
+        const validSolutionStatus = isValid ? 
             '<span class="text-green-600">✓ All coverage requirements met</span>' :
             '<span class="text-red-600">✗ Coverage requirements not met</span>';
+        const optimalSolutionStatus = isOptimal ?
+            '<span class="text-green-600">✓ Optimal solution found</span>' :
+            '<span class="text-red-600">✗ Suboptimal solution</span>';
         
         container.innerHTML = `
             <div class="bg-gray-50 p-4 rounded-md">
                 <div class="font-medium mb-2">Verification Status:</div>
-                <div>${status}</div>
+                <div class="flex items-center space-x-4">
+                    ${validSolutionStatus}
+                    ${optimalSolutionStatus}
+                </div>
             </div>
-        `;
+        `;  
     }
 }

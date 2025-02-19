@@ -4,7 +4,7 @@ class MCDCController {
         this.view = view;
     }
 
-    async processExpression(expression) {
+    async processExpression(expression, maxTries) {
         try {
             const parsed = await this.parseExpression(expression);
             this.model.variables = parsed.variables;
@@ -12,7 +12,7 @@ class MCDCController {
 
             this.model.generateTruthTable();
             this.model.findIndependencePairs();
-            this.model.findMinimumTestCases();
+            this.model.findMinimumTestCases(maxTries);
             this.model.verifyCoverage();
 
             return {
@@ -20,7 +20,8 @@ class MCDCController {
                 truthTable: this.model.truthTable,
                 independencePairs: this.model.independencePairs,
                 minimalTestCases: this.model.minimalTestCases,
-                coverageValid: this.model.coverageValid
+                coverageValid: this.model.coverageValid,
+                optimalSolution: this.model.optimalSolution
             };
         } catch (error) {
             throw new Error(`Processing failed: ${error.message}`);

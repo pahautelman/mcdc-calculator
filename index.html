@@ -1,58 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MC/DC Calculator</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- CodeMirror CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <!-- CodeMirror JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/placeholder.min.js"></script>
-    
-    <!-- local scripts -->
-    <script src="parser.js"></script>
-    <script src="model.js"></script>
-    <script src="view.js"></script>
-    <script src="controller.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MC/DC Calculator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- CodeMirror CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <!-- CodeMirror JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/placeholder.min.js"></script>
+  
+  <!-- local scripts -->
+  <script src="parser.js"></script>
+  <script src="model.js"></script>
+  <script src="view.js"></script>
+  <script src="controller.js"></script>
 
-    <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="bg-gray-100 min-h-screen p-8">
-    <div class="mx-auto">
-        <header class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">MC/DC Coverage Calculator</h1>
-            <p class="text-gray-600">Enter a boolean expression to calculate minimal test cases</p>
-        </header>
+  <div class="mx-auto">
+    <!-- Header with Learn More button -->
+    <header class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">MC/DC Coverage Calculator</h1>
+        <p class="text-gray-600">Enter a boolean expression to calculate minimal test cases</p>
+      </div>
+      <button id="openModal" type="button" class="text-blue-600 hover:text-blue-800">
+        Learn More
+      </button>
+    </header>
 
-        <form id="mainForm" class="bg-white rounded-lg shadow-md p-6">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Boolean Expression
-                </label>
-                <div id="editorContainer" class="w-full border border-gray-300 rounded-md overflow-hidden"></div>
-            </div>
-
-            <div class="flex justify-end">
-                <button
-                    type="submit"
-                    class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                >
-                    Calculate
-                </button>
-            </div>
-        </form>
-
-        <div id="resultContainer" class="mt-8 hidden">
-            <!-- Results will be populated here -->
+    <!-- Advanced Options: Max Tries Input Section -->
+    <div class="mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Algorithm Iterations (maxTries)</label>
+            <input 
+              type="number" 
+              id="maxTries" 
+              min="10" 
+              max="500" 
+              value="10" 
+              class="mt-1 block w-32 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+          </div>
+          <button 
+            type="button" 
+            data-info-trigger
+            class="text-blue-600 hover:text-blue-800 focus:outline-none"
+          >
+            ℹ️ What's this?
+          </button>
         </div>
+        <div class="max-tries-info text-sm text-gray-600 hidden">
+          <p class="mb-2">The <code>maxTries</code> parameter controls the number of attempts the algorithm makes to find the minimal test set.</p>
+          <ul class="list-disc list-inside space-y-1">
+            <li><strong>Lower values (10-100):</strong> Faster computation, might miss optimal solutions</li>
+            <li><strong>Higher values (100-500):</strong> Better chance of optimal solution, longer computation</li>
+          </ul>
+          <p class="mt-2">Adjust if you suspect better solutions might exist than what's found with current settings. Note that optimal solutions have <span><strong> (number_of_variables) + 1 </strong></span> test cases.</p>
+        </div>
+      </div>
     </div>
 
-   <!-- main script -->
-    <script src="script.js"></script>
+    <!-- Main Calculator Form -->
+    <form id="mainForm" class="bg-white rounded-lg shadow-md p-6">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Boolean Expression
+        </label>
+        <div id="editorContainer" class="w-full border border-gray-300 rounded-md overflow-hidden"></div>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Calculate
+        </button>
+      </div>
+    </form>
+
+    <!-- Results Section -->
+    <div id="resultContainer" class="mt-8 hidden">
+      <!-- Results will be populated here -->
+    </div>
+  </div>
+
+  <!-- Modal for MC/DC Info -->
+  <div id="mcDcModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-11/12 md:w-1/2">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-bold">About MC/DC Coverage</h2>
+        <button type="button" id="closeModal" class="text-gray-600 hover:text-gray-800 text-2xl">&times;</button>
+      </div>
+      <div class="mt-4 text-gray-600">
+        <p class="mb-4"><strong>MC/DC (Modified Condition/Decision Coverage)</strong> is a structural testing criterion that ensures your code is thoroughly examined. It requires that:</p>
+        <ul class="list-disc list-inside space-y-2">
+          <li><strong>Every entry/exit point is exercised:</strong> All parts of your program are run.</li>
+          <li><strong>All condition outcomes are tested:</strong> Each condition in a decision takes both true and false paths.</li>
+          <li><strong>Independent impact is verified:</strong> Every condition is shown to influence the decision's outcome directly.</li>
+        </ul>
+        <p class="mt-4">Using MC/DC helps uncover subtle bugs and increases confidence in software quality, which is especially crucial in safety-critical systems.
+          Our calculator applies a heuristic algorithm to generate a minimal set of test cases by:
+        </p>
+        <ol class="list-disc list-inside space-y-2">
+          <li>Generating a complete truth table,</li>
+          <li>Identifying independent condition pairs,</li>
+          <li>Iteratively and randomly searching for the optimal test set.</li>
+        </ol>
+      </div>
+    </div>verified
+  </div>
+
+  <!-- Main script -->
+  <script src="script.js"></script>
+  <script>
+    // Modal functionality for MC/DC info
+    const openModalButton = document.getElementById('openModal');
+    const closeModalButton = document.getElementById('closeModal');
+    const modal = document.getElementById('mcDcModal');
+
+    openModalButton.addEventListener('click', () => {
+      modal.classList.remove('hidden');
+    });
+
+    closeModalButton.addEventListener('click', () => {
+      modal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside the modal content
+    window.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.classList.add('hidden');
+      }
+    });
+  </script>
 </body>
 </html>
