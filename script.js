@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const controller = new MCDCController(model, view);
 
     view.setSubmitHandler(async (expression, maxTries) => {
+        console.log('max tries', maxTries);
         const results = await controller.processExpression(expression, maxTries);
         view.displayResults(results);
     });

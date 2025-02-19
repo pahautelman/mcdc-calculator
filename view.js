@@ -52,7 +52,7 @@ class MCDCView {
 
             this.showLoading();
             try {
-                await this.onSubmit(expression);
+                await this.onSubmit(expression, maxTries);
             } catch (error) {
                 console.error(error);
                 this.showError(error.message);
@@ -72,6 +72,13 @@ class MCDCView {
             </div>
         `;
         this.resultContainer.classList.remove('hidden');
+    }
+
+    showConfirmation(message) {
+        return new Promise((resolve) => {
+            const confirmed = window.confirm(message);
+            resolve(confirmed);
+        });
     }
 
     showError(message) {

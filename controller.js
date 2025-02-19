@@ -7,6 +7,16 @@ class MCDCController {
     async processExpression(expression, maxTries) {
         try {
             const parsed = await this.parseExpression(expression);
+
+            // Check if the expression contains more than 10 variables
+            if (parsed.variables.length > 10) {
+                const warningMessage = `Warning: You have entered ${parsed.variables.length} variables. Execution might be slow. It is recommended to start with a lower maxTries value and increase it if an optimal solution is not found. Do you wish to continue?`;
+                const userConfirmed = await this.view.showConfirmation(warningMessage);
+                if (!userConfirmed) {
+                    throw new Error('Execution cancelled by user.');
+                }
+            }
+
             this.model.variables = parsed.variables;
             this.model.decisionFunction = parsed.decisionFunction;
 
@@ -29,7 +39,6 @@ class MCDCController {
     }
 
     async parseExpression(expression) {
-        // This would call your existing parser implementation
         return parseExpression(expression);
     }
 }
