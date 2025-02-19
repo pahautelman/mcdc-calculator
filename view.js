@@ -100,7 +100,7 @@ class MCDCView {
         this.resultContainer.innerHTML = '';
         
         this.createSection('Minimal Test Cases', 
-            content => this.renderMinimalTestCases(content, results.minimalTestCases, results.variables), 
+            content => this.renderMinimalTestCases(content, results.minimalTestCases, results.independencePairs, results.variables), 
             true
         );
         
@@ -144,7 +144,7 @@ class MCDCView {
         this.resultContainer.appendChild(section);
     }
 
-    renderMinimalTestCases(container, testCases, variables) {
+    renderMinimalTestCases(container, testCases, independentPairs, variables) {
         if (testCases.length === 0) {
             container.innerHTML = `<p class="text-red-500">No valid test cases found</p>`;
             return;
@@ -155,7 +155,10 @@ class MCDCView {
         
         testCases.forEach((testCase, index) => {
             const div = document.createElement('div');
-            div.className = 'bg-gray-50 p-3 rounded-md';
+            // add a specific class for easier selection and attach the data-index attribute
+            div.className = 'bg-gray-50 p-3 rounded-md test-case';
+            div.setAttribute('data-index', testCase.index);
+            
             div.innerHTML = `
                 <span class="font-mono text-sm">Test ${index + 1}:</span>
                 ${variables.map(v => `
@@ -169,8 +172,38 @@ class MCDCView {
             `;
             list.appendChild(div);
         });
-        container.appendChild(list);    
+        container.appendChild(list);
+    
+        // Add hover event listeners for highlighting independence pairs
+        list.querySelectorAll('.test-case').forEach(div => {
+            div.addEventListener('mouseenter', () => {
+                const index = parseInt(div.getAttribute('data-index'));
+                // Use the independence pairs stored on the view (set in displayResults)
+                if (!independentPairs) return;
+                // Loop through each variable’s pairs to see if this test case is included
+                independentPairs.forEach((pairs, variable) => {
+                    pairs.forEach(pair => {
+                        if (pair.indices.includes(index)) {
+                            // For each test case index in the pair, highlight its element
+                            pair.indices.forEach(i => {
+                                const elem = list.querySelector(`[data-index='${i}']`);
+                                if (elem) {
+                                    elem.classList.add('bg-yellow-200');
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            div.addEventListener('mouseleave', () => {
+                // Remove highlight from all test cases
+                list.querySelectorAll('.test-case').forEach(el => {
+                    el.classList.remove('bg-yellow-200');
+                });
+            });
+        });
     }
+    
 
     renderIndependencePairs(container, pairs, variables) {
         const pairsContainer = document.createElement('div');

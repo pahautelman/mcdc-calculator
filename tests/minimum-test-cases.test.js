@@ -7,44 +7,49 @@ function runTests() {
             name: "Single variable A",
             variables: ["A"],
             decisionFunction: (A) => A,
-            expectedMinimalCount: 2,
-            expectCoverageValid: true
         },
         {
             name: "A OR B",
             variables: ["A", "B"],
             decisionFunction: (A, B) => A || B,
-            expectedMinimalCount: 3,
-            expectCoverageValid: true
         },
         {
             name: "A AND B",
             variables: ["A", "B"],
             decisionFunction: (A, B) => A && B,
-            expectedMinimalCount: 3,
-            expectCoverageValid: true
         },
         {
             name: "Three variables: (A AND B) OR C",
             variables: ["A", "B", "C"],
             decisionFunction: (A, B, C) => (A && B) || C,
-            expectedMinimalCount: 4,
-            expectCoverageValid: true
         },
         {
             name: "A XOR B",
             variables: ["A", "B"],
             decisionFunction: (A, B) => A !== B,
-            expectedMinimalCount: 3,
-            expectCoverageValid: true
         },
         {
             name: "Complex expression with three variables",
             variables: ["A", "B", "C"],
             decisionFunction: (A, B, C) => (A || B) && C,
-            expectedMinimalCount: 4,
-            expectCoverageValid: true
-        }
+        },
+        {
+            name: "Complex expression with eight variables",
+            variables: ["A", "B", "C", "D", "E", "F", "G", "H"],
+            decisionFunction: (A, B, C, D, E, F, G, H) => ((A && B) || (!C && D)) && ((E || F) && (!G || H)),
+        },
+        {
+            name: "Complex expression with eight variables and repeated checks",
+            variables: ["A", "B", "C", "D", "E", "F", "G", "H"],
+            decisionFunction: (A, B, C, D, E, F, G, H) => 
+                ((A && B) || (A && !C)) && ((D || E) && (E || F) && (!G || H)),
+        },
+        {
+            name: "Complex expression with nine variables",
+            variables: ["A", "B", "C", "D", "E", "F", "G", "H", "I"],
+            decisionFunction: (A, B, C, D, E, F, G, H, I) => 
+                ((A && !B) || (C && D)) && ((E || F) && (!G || (H && I))),
+        },
     ];
 
     tests.forEach(test => {
@@ -62,20 +67,28 @@ function runTests() {
             model.findIndependencePairs();
             
             // Find minimal test cases
-            const minimalTestCases = model.findMinimumTestCases();
+            const minimalTestCases = model.findMinimumTestCases(500);
             
             // Verify coverage
-            const coverageValid = model.verifyCoverage();
+            const results = model.verifyCoverage();
+
+            const expectedMinimalCount = test.variables.length + 1;
 
             // 1. Check minimal test cases count
-            if (minimalTestCases.length !== test.expectedMinimalCount) {
-                console.error(`FAIL: Expected ${test.expectedMinimalCount} test cases, got ${minimalTestCases.length}`);
+            if (minimalTestCases.length !== expectedMinimalCount) {
+                console.error(`FAIL: Expected ${expectedMinimalCount} test cases, got ${minimalTestCases.length}`);
                 passed = false;
             }
 
             // 2. Check coverage validation
-            if (coverageValid !== test.expectCoverageValid) {
-                console.error(`FAIL: Expected coverage ${test.expectCoverageValid}, got ${coverageValid}`);
+            if (results.coverageValid !== true) {
+                console.error(`FAIL: Expected coverage ${true}, got ${coverageValid}`);
+                passed = false;
+            }
+
+            // 3. Check optimal solution
+            if (results.optimalSolution !== true) {
+                console.error(`FAIL: Expected optimal solution, got ${results.optimalSolution}`);
                 passed = false;
             }
 

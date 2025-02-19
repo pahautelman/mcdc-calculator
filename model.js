@@ -76,60 +76,62 @@ class MCDCModel {
     }
   
     findMinimumTestCases(maxTries = 10) {
-      const n = this.independencePairs.size; // Number of variables in the boolean condition
-      const optimalSize = n + 1;
-      let bestSolution = null;
-  
-      // Helper: Fisher–Yates shuffle.
-      function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [array[i], array[j]] = [array[j], array[i]];
-        }
-        return array;
-      }
-  
-      for (let attempt = 0; attempt < maxTries; attempt++) {
-        const selectedTestCases = new Set();
-  
-        // Get the variables, sorting by number of pairs (most restricted first)
-        const sortedVars = shuffle(Array.from(this.independencePairs.entries()))
-          .sort(([, pairsA], [, pairsB]) => pairsA.length - pairsB.length);
-  
-        // For each variable, shuffle its pairs and pick the pair that adds the fewest new test cases.
-        sortedVars.forEach(([variable, pairs]) => {
-          if (pairs.length === 0) {
-            return;
-          }
-          const shuffledPairs = shuffle([...pairs]);
-          let bestPair = null;
-          let minNewTests = Infinity;
-          for (const pair of shuffledPairs) {
-            const newTests = pair.indices.filter(i => !selectedTestCases.has(i)).length;
-            if (newTests < minNewTests) {
-              bestPair = pair;
-              minNewTests = newTests;
-              if (minNewTests === 1) {
-                break;
-              }
+        const n = this.independencePairs.size; // Number of variables in the boolean condition
+        const optimalSize = n + 1;
+        let bestSolution = null;
+    
+        // Helper: Fisher–Yates shuffle.
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
-          }
-          if (bestPair) {
-            bestPair.indices.forEach(i => selectedTestCases.add(i));
-          }
-        });
-  
-        if (selectedTestCases.size === optimalSize) {
-          bestSolution = selectedTestCases;
-          break;
+            return array;
         }
-        if (!bestSolution || selectedTestCases.size < bestSolution.size) {
-          bestSolution = selectedTestCases;
+    
+        for (let attempt = 0; attempt < maxTries; attempt++) {
+            const selectedTestCases = new Set();
+    
+            // Get the variables, sorting by number of pairs (most restricted first)
+            const sortedVars = shuffle(Array.from(this.independencePairs.entries()))
+            .sort(([, pairsA], [, pairsB]) => pairsA.length - pairsB.length);
+    
+            // For each variable, shuffle its pairs and pick the pair that adds the fewest new test cases.
+            sortedVars.forEach(([variable, pairs]) => {
+                if (pairs.length === 0) {
+                    return;
+                }
+                const shuffledPairs = shuffle([...pairs]);
+                let bestPair = null;
+                let minNewTests = Infinity;
+                for (const pair of shuffledPairs) {
+                    const newTests = pair.indices.filter(i => !selectedTestCases.has(i)).length;
+                    if (newTests < minNewTests) {
+                    bestPair = pair;
+                    minNewTests = newTests;
+                    if (minNewTests === 1) {
+                        break;
+                    }
+                    }
+                }
+                if (bestPair) {
+                    bestPair.indices.forEach(i => selectedTestCases.add(i));
+                }
+            });
+    
+            if (selectedTestCases.size === optimalSize) {
+                bestSolution = selectedTestCases;
+                break;
+            }
+            if (!bestSolution || selectedTestCases.size < bestSolution.size) {
+                bestSolution = selectedTestCases;
+            }
         }
-      }
-  
-      this.minimalTestCases = Array.from(bestSolution).map(i => this.truthTable[i]);
-      return this.minimalTestCases;
+    
+        this.minimalTestCases = Array.from(bestSolution).map(i =>
+            Object.assign({}, this.truthTable[i], { index: i })
+        );
+        return this.minimalTestCases;
     }
   
     verifyCoverage() {
